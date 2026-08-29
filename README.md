@@ -1,8 +1,4 @@
-note to the developer: for any website that you may create for this project, perferably keep the theme of https://cstaks.github.io/ and make sure to use /docs/.
-
-discord webhook workflow: follow the steps in order to make the discord webhook functional
-
-# Project Name
+# Typist
 
 Short description of what this does.
 
