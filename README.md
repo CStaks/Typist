@@ -1,30 +1,40 @@
 # Typist
 
-Short description of what this does.
+A small, local-first Markdown editor for macOS, Windows, and Linux. Typist uses Tauri for native windows and React for the editing surface.
 
-## 🚀 Getting Started
-Steps to run locally or set up the project.
+## Scaffold
 
-## 🤝 Contributing
-See CONTRIBUTING.md
+```sh
+bun create tauri-app typist --template react-ts
+cd typist
+bun add framer-motion
+bun add -d tailwindcss postcss autoprefixer
+bunx tailwindcss init -p
+```
 
-### Attribution Requirement
+Replace the generated `src/index.css`, add `src/components/FirstLaunchIntro.tsx`, and place the native commands in `src-tauri/src/lib.rs` and `src-tauri/src/main.rs`.
 
-This project is licensed under the MIT License.
+## Run
 
-If you use or redistribute substantial portions of this codebase (such as entire files, major components, or closely derived works), you must:
+```sh
+bun install
+bun tauri dev
+```
 
-* Retain the original license and copyright notice
-* Provide clear and visible credit to this repository
+## Structure
 
-Visible credit means mentioning this repository in your README, project description, or other prominent documentation.
+```text
+src/
+  components/FirstLaunchIntro.tsx
+  index.css
+src-tauri/
+  src/lib.rs
+  src/main.rs
+README.md
+```
 
-Small snippets or minor usage do not require attribution.
+The filesystem commands are intentionally small. Add path validation and workspace boundaries before exposing them to untrusted input.
 
-This requirement exists to ensure proper credit is given to the original authors.
+## License
 
-
-## 📄 License
-MIT 
-CStaks uses the MIT license by default.
-
+MIT
