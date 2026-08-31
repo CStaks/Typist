@@ -36,7 +36,6 @@ fn safe_path(root: &Path, requested: &str) -> Result<PathBuf, String> {
     Ok(canonical)
 }
 
-#[tauri::command]
 pub async fn window_snapshot(app: AppHandle, state: State<'_, WindowState>) -> Result<WindowSnapshot, String> {
     let window = app.get_webview_window("main").ok_or("main window not found")?;
     let snapshot = WindowSnapshot { focused: window.is_focused().unwrap_or(false), maximized: window.is_maximized().unwrap_or(false) };
@@ -67,26 +66,22 @@ fn walk(path: &Path, root: &Path) -> Result<Vec<TreeEntry>, String> {
     Ok(entries)
 }
 
-#[tauri::command]
 pub async fn list_workspace(path: String, state: State<'_, WorkspaceState>) -> Result<Vec<TreeEntry>, String> {
     let root = canonical_workspace(Path::new(&path))?;
     *state.0.lock().await = Some(root.clone());
     walk(&root, &root)
 }
 
-#[tauri::command]
 pub async fn read_workspace_file(path: String, state: State<'_, WorkspaceState>) -> Result<String, String> {
     let root = state.0.lock().await.clone().ok_or("workspace is not selected")?;
     fs::read_to_string(safe_path(&root, &path)?).map_err(|error| error.to_string())
 }
 
-#[tauri::command]
 pub async fn write_workspace_file(path: String, contents: String, state: State<'_, WorkspaceState>) -> Result<(), String> {
     let root = state.0.lock().await.clone().ok_or("workspace is not selected")?;
     fs::write(safe_path(&root, &path)?, contents).map_err(|error| error.to_string())
 }
 
-#[tauri::command]
 pub async fn choose_workspace(app: AppHandle, state: State<'_, WorkspaceState>) -> Result<Option<String>, String> {
     let selected = app.dialog().file().set_title("Choose workspace").blocking_pick_folder();
     let Some(path) = selected else { return Ok(None); };
@@ -96,7 +91,6 @@ pub async fn choose_workspace(app: AppHandle, state: State<'_, WorkspaceState>) 
     Ok(Some(root.to_string_lossy().into_owned()))
 }
 
-#[tauri::command]
 pub fn choose_markdown_file(app: AppHandle) -> Option<String> {
     app.dialog().file().add_filter("Markdown", &["md", "markdown"]).blocking_pick_file().and_then(|path| path.into_path().ok()).map(|path| path.to_string_lossy().into_owned())
 }
