@@ -9,7 +9,7 @@ import "./index.css";
 
 const currentCommit = import.meta.env.VITE_COMMIT_SHA ?? "";
 const appVersion = import.meta.env.VITE_APP_VERSION ?? "0.1.1";
-const logoUrl = "/assets/typist.png";
+const logoUrl = "/assets/typist.svg";
 
 export default function App() {
   const [dark, setDark] = useState(() => localStorage.getItem("typist-theme") === "dark");
