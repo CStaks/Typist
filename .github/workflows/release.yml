@@ -38,15 +38,27 @@ jobs:
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      - name: Calculate release version
+        id: release
+        shell: bash
+        run: |
+          short_sha="$(printf '%s' "$GITHUB_SHA" | cut -c1-7)"
+          version="0.1.1-${GITHUB_RUN_NUMBER}-${short_sha}"
+          artifact_suffix="${GITHUB_RUN_NUMBER}-${short_sha}"
+          echo "short_sha=${short_sha}" >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "artifact_suffix=${artifact_suffix}" >> "$GITHUB_OUTPUT"
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VITE_COMMIT_SHA: ${{ github.sha }}
-          VITE_APP_VERSION: 0.1.1-${{ github.run_number }}-${{ github.sha }}
+          VITE_COMMIT_SHA: ${{ steps.release.outputs.short_sha }}
+          VITE_APP_VERSION: ${{ steps.release.outputs.version }}
         with:
-          tagName: v0.1.1-${{ github.run_number }}-${{ github.sha }}
-          releaseName: Typist v0.1.1-${{ github.run_number }}-${{ github.sha }}
-          releaseBody: Automated release for commit ${{ github.sha }}.
+          tagName: v${{ steps.release.outputs.version }}
+          releaseName: Typist v${{ steps.release.outputs.version }}
+          releaseBody: Automated release for commit ${{ steps.release.outputs.short_sha }}. Artifact filenames use the suffix ${{ steps.release.outputs.artifact_suffix }}.
+          assetNamePattern: Typist-${{ steps.release.outputs.artifact_suffix }}-[platform]-[arch][ext]
+          includeUpdaterJson: false
           releaseDraft: false
           prerelease: false
           args: --target ${{ matrix.target }}
