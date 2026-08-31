@@ -12,6 +12,7 @@ const currentCommit = import.meta.env.VITE_COMMIT_SHA ?? "";
 export default function App() {
   const [dark, setDark] = useState(() => localStorage.getItem("typist-theme") === "dark");
   const [selectedFile, setSelectedFile] = useState<string>();
+  const [workspace] = useState<string>();
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -60,13 +61,13 @@ export default function App() {
         </div>
       </header>
       <div className="flex min-h-0 flex-1">
-        <Sidebar onSelectFile={setSelectedFile} />
+        <Sidebar rootPath={workspace} onSelectFile={setSelectedFile} />
         <section className="flex min-w-0 flex-1 flex-col">
           <div className="flex h-10 items-center border-b border-[var(--border)] px-6 text-xs text-[var(--text-muted)]">{selectedFile ?? "Untitled.md"}{isDirty && <span className="ml-2 h-1.5 w-1.5 rounded-full bg-[var(--accent)]" aria-label="Unsaved changes" />}</div>
           {loading ? <div className="flex flex-1 items-center justify-center text-sm text-[var(--text-muted)]">Opening document…</div> : <MarkdownEditor value={content} onChange={handleChange} />}
         </section>
       </div>
-      <FirstLaunchIntro />
+      <FirstLaunchIntro onDismiss={() => undefined} />
     </main>
   );
 }
