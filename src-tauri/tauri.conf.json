@@ -32,7 +32,7 @@
     "shortDescription": "A local-first Markdown editor",
     "longDescription": "Typist is a focused, local-first Markdown editor for macOS, Windows, and Linux.",
     "copyright": "Copyright © 2026 CStaks",
-    "createUpdaterArtifacts": true
+    "createUpdaterArtifacts": false
   },
   "plugins": {
     "updater": {
