@@ -43,8 +43,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VITE_COMMIT_SHA: ${{ github.sha }}
         with:
-          tagName: v0.1.0-${{ github.run_number }}
-          releaseName: Typist v0.1.0-${{ github.run_number }}
+          tagName: v0.1.1-${{ github.run_number }}
+          releaseName: Typist v0.1.1-${{ github.run_number }}
           releaseBody: Automated release for commit ${{ github.sha }}.
           releaseDraft: false
           prerelease: false
