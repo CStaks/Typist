@@ -1,48 +1,27 @@
-import { Editor, defaultValueCtx, editorViewCtx, parserCtx, rootCtx } from "@milkdown/core";
-import { listener, listenerCtx } from "@milkdown/plugin-listener";
-import { commonmark } from "@milkdown/preset-commonmark";
-import { gfm } from "@milkdown/preset-gfm";
-import { Milkdown, useEditor } from "@milkdown/react";
 import { useEffect, useRef } from "react";
 
 type EditorProps = { value: string; onChange: (markdown: string) => void };
 
 export function MarkdownEditor({ value, onChange }: EditorProps) {
-  const onChangeRef = useRef(onChange);
-  const initialValueRef = useRef(value);
-  const lastAppliedValueRef = useRef(value);
-  onChangeRef.current = onChange;
-
-  const { get } = useEditor(
-    (root) => Editor.make()
-      .config((ctx) => {
-        ctx.set(rootCtx, root);
-        ctx.set(defaultValueCtx, initialValueRef.current);
-        ctx.get(listenerCtx).markdownUpdated((_ctx, markdown) => {
-          lastAppliedValueRef.current = markdown;
-          onChangeRef.current(markdown);
-        });
-      })
-      .use(commonmark)
-      .use(gfm)
-      .use(listener),
-    [],
-  );
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    if (value === lastAppliedValueRef.current) return;
-    get()?.action((ctx) => {
-      const view = ctx.get(editorViewCtx);
-      const doc = ctx.get(parserCtx)(value);
-      if (!doc) return;
-      lastAppliedValueRef.current = value;
-      view.dispatch(view.state.tr.replaceWith(0, view.state.doc.content.size, doc.content));
-    });
-  }, [get, value]);
+    if (textareaRef.current && textareaRef.current.value !== value) {
+      textareaRef.current.value = value;
+    }
+  }, [value]);
 
   return (
-    <div className="milkdown-editor mx-auto h-full w-full max-w-3xl overflow-auto px-6 py-12 font-sans text-[17px] leading-8 text-[var(--text-primary)] [&_.ProseMirror]:min-h-full [&_.ProseMirror]:outline-none [&_.ProseMirror_h1]:mb-6 [&_.ProseMirror_h1]:text-4xl [&_.ProseMirror_h1]:font-semibold [&_.ProseMirror_h1]:leading-tight [&_.ProseMirror_h1]:tracking-[-0.04em] [&_.ProseMirror_h2]:mb-4 [&_.ProseMirror_h2]:mt-10 [&_.ProseMirror_h2]:text-2xl [&_.ProseMirror_h2]:font-semibold [&_.ProseMirror_h2]:tracking-[-0.03em] [&_.ProseMirror_p]:mb-5 [&_.ProseMirror_pre]:my-6 [&_.ProseMirror_pre]:overflow-x-auto [&_.ProseMirror_pre]:rounded-xl [&_.ProseMirror_pre]:bg-[var(--code)] [&_.ProseMirror_pre]:p-4 [&_.ProseMirror_pre]:font-mono [&_.ProseMirror_pre]:text-sm [&_.ProseMirror_code]:font-mono [&_.ProseMirror_code]:text-[0.9em]">
-      <Milkdown />
+    <div className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 overflow-auto px-6 py-12">
+      <textarea
+        ref={textareaRef}
+        defaultValue={value}
+        aria-label="Markdown document"
+        onChange={(event) => onChange(event.target.value)}
+        spellCheck={false}
+        placeholder="Start writing…"
+        className="min-h-full w-full resize-none border-0 bg-transparent font-sans text-[17px] leading-8 text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)]"
+      />
     </div>
   );
 }
