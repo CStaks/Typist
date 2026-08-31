@@ -27,7 +27,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "icon": ["icons/icon.png"],
+    "icon": ["icons/icon.png", "icons/icon.ico"],
     "category": "Productivity",
     "shortDescription": "A local-first Markdown editor",
     "longDescription": "Typist is a focused, local-first Markdown editor for macOS, Windows, and Linux.",
