@@ -53,7 +53,7 @@ export default function App() {
   return (
     <main className="flex h-screen flex-col overflow-hidden bg-[var(--canvas)] text-[var(--text-primary)]">
       <header data-tauri-drag-region className="flex h-12 shrink-0 items-center justify-between border-b border-[var(--border)] px-4 pl-20">
-        <span className="pointer-events-none text-sm font-semibold tracking-[-0.02em]">Typist</span>
+        <div className="pointer-events-none flex items-center gap-2 text-sm font-semibold tracking-[-0.02em]"><img src="/assets/typist.png" alt="" className="h-6 w-6 rounded-md object-contain" />Typist</div>
         <div className="flex items-center gap-1">
           {updateAvailable && <a href={releasesUrl} target="_blank" rel="noreferrer" aria-label="Update available" className="rounded-lg p-2 text-[var(--accent)] hover:bg-black/5 dark:hover:bg-white/10"><Bell size={16} /></a>}
           <button aria-label={dark ? "Use light theme" : "Use dark theme"} onClick={() => setDark((value) => !value)} className="rounded-lg p-2 text-[var(--text-muted)] hover:bg-black/5 dark:hover:bg-white/10">{dark ? <Sun size={16} /> : <Moon size={16} />}</button>
