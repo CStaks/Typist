@@ -51,7 +51,7 @@ export default function App() {
   };
 
   return (
-    <main className="flex h-screen flex-col overflow-hidden bg-[var(--canvas)] text-[var(--text-primary)]">
+    <main className="flex h-screen min-h-0 flex-col overflow-hidden bg-[var(--canvas)] text-[var(--text-primary)]">
       <header data-tauri-drag-region className="flex h-12 shrink-0 items-center justify-between border-b border-[var(--border)] px-4 pl-20">
         <div className="pointer-events-none flex items-center gap-2 text-sm font-semibold tracking-[-0.02em]"><img src="/assets/typist.png" alt="" className="h-6 w-6 rounded-md object-contain" />Typist</div>
         <div className="flex items-center gap-1">
