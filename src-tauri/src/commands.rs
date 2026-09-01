@@ -1,5 +1,6 @@
 use serde::Serialize;
 use std::{fs, path::{Path, PathBuf}};
+use tauri::path::BaseDirectory;
 use tauri::{AppHandle, Manager, State};
 use tauri_plugin_dialog::DialogExt;
 use tokio::sync::Mutex;
@@ -65,6 +66,40 @@ fn walk(path: &Path, root: &Path) -> Result<Vec<TreeEntry>, String> {
     entries.sort_by_key(|entry| (!entry.directory, entry.name.to_lowercase()));
     let _ = root;
     Ok(entries)
+}
+
+#[tauri::command]
+pub async fn create_workspace(app: AppHandle, name: String, state: State<'_, WorkspaceState>) -> Result<String, String> {
+    let name = name.trim();
+    if name.is_empty() || name == "." || name == ".." || name.contains(['/', '\\\\']) {
+        return Err("workspace name must be a simple folder name".into());
+    }
+    let documents = app.path().resolve("Documents", BaseDirectory::Home).map_err(|error| error.to_string())?;
+    fs::create_dir_all(&documents).map_err(|error| error.to_string())?;
+    let root = documents.join(name);
+    fs::create_dir_all(&root).map_err(|error| error.to_string())?;
+    let journal = root.join("Journal");
+    fs::create_dir_all(&journal).map_err(|error| error.to_string())?;
+    let readme = root.join("README.md");
+    if !readme.exists() {
+        fs::write(&readme, format!("# {name}\n\nYour local Typist workspace.\n")).map_err(|error| error.to_string())?;
+    }
+    let root = canonical_workspace(&root)?;
+    *state.0.lock().await = Some(root.clone());
+    Ok(root.to_string_lossy().into_owned())
+}
+
+#[tauri::command]
+pub async fn open_daily_journal(state: State<'_, WorkspaceState>) -> Result<String, String> {
+    let root = state.0.lock().await.clone().ok_or("workspace is not selected")?;
+    let journal = root.join("Journal");
+    fs::create_dir_all(&journal).map_err(|error| error.to_string())?;
+    let date = chrono::Local::now().format("%Y-%m-%d").to_string();
+    let path = journal.join(format!("{date}.md"));
+    if !path.exists() {
+        fs::write(&path, format!("# {date}\n\n")).map_err(|error| error.to_string())?;
+    }
+    Ok(path.to_string_lossy().into_owned())
 }
 
 #[tauri::command]
