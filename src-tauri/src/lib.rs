@@ -11,6 +11,8 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             commands::window_snapshot,
+            commands::create_workspace,
+            commands::open_daily_journal,
             commands::list_workspace,
             commands::read_workspace_file,
             commands::write_workspace_file,
