@@ -1,27 +1,51 @@
+import { Editor, rootCtx, defaultValueCtx, editorViewCtx, parserCtx } from "@milkdown/core";
+import { commonmark } from "@milkdown/preset-commonmark";
+import { gfm } from "@milkdown/preset-gfm";
+import { listener, listenerCtx } from "@milkdown/plugin-listener";
 import { useEffect, useRef } from "react";
 
 type EditorProps = { value: string; onChange: (markdown: string) => void };
 
 export function MarkdownEditor({ value, onChange }: EditorProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<Editor | null>(null);
+  const valueRef = useRef(value);
+  const onChangeRef = useRef(onChange);
+  valueRef.current = value;
+  onChangeRef.current = onChange;
 
   useEffect(() => {
-    if (textareaRef.current && textareaRef.current.value !== value) {
-      textareaRef.current.value = value;
+    if (!rootRef.current) return;
+    const editor = Editor.make()
+      .config((ctx) => {
+        ctx.set(rootCtx, rootRef.current);
+        ctx.set(defaultValueCtx, valueRef.current);
+        ctx.get(listenerCtx).markdownUpdated((_, markdown) => onChangeRef.current(markdown));
+      })
+      .use(commonmark)
+      .use(gfm)
+      .use(listener);
+    editorRef.current = editor;
+    editor.create().catch(() => undefined);
+    return () => {
+      editor.destroy().catch(() => undefined);
+      editorRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor || value === valueRef.current) return;
+    try {
+      const view = editor.ctx.get(editorViewCtx);
+      const next = editor.ctx.get(parserCtx)(value);
+      if (next && view.state.doc.textContent !== next.textContent) {
+        view.dispatch(view.state.tr.replaceWith(0, view.state.doc.content.size, next.content));
+      }
+    } catch {
+      // The editor may still be initializing; its default value handles that case.
     }
   }, [value]);
 
-  return (
-    <div className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 overflow-auto px-6 py-12">
-      <textarea
-        ref={textareaRef}
-        defaultValue={value}
-        aria-label="Markdown document"
-        onChange={(event) => onChange(event.target.value)}
-        spellCheck={false}
-        placeholder="Start writing…"
-        className="min-h-full w-full resize-none border-0 bg-transparent font-sans text-[17px] leading-8 text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)]"
-      />
-    </div>
-  );
+  return <div ref={rootRef} aria-label="Markdown document" className="markdown-editor mx-auto min-h-0 w-full max-w-3xl flex-1 overflow-auto px-6 py-12" />;
 }
