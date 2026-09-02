@@ -71,7 +71,7 @@ fn walk(path: &Path, root: &Path) -> Result<Vec<TreeEntry>, String> {
 #[tauri::command]
 pub async fn create_workspace(app: AppHandle, name: String, state: State<'_, WorkspaceState>) -> Result<String, String> {
     let name = name.trim();
-    if name.is_empty() || name == "." || name == ".." || name.contains(['/', '\\\\']) {
+    if name.is_empty() || name == "." || name == ".." || name.contains(['/', '\\']) {
         return Err("workspace name must be a simple folder name".into());
     }
     let documents = app.path().resolve("Documents", BaseDirectory::Home).map_err(|error| error.to_string())?;
