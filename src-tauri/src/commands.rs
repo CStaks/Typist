@@ -68,21 +68,20 @@ fn walk(path: &Path, root: &Path) -> Result<Vec<TreeEntry>, String> {
     Ok(entries)
 }
 
-#[tauri::command]
-pub async fn create_workspace(app: AppHandle, name: String, state: State<'_, WorkspaceState>) -> Result<String, String> {
+fn validate_vault_name(name: &str) -> Result<&str, String> {
     let name = name.trim();
     if name.is_empty() || name == "." || name == ".." || name.contains(['/', '\\']) {
-        return Err("workspace name must be a simple folder name".into());
+        return Err("vault name must be a simple folder name".into());
     }
-    let documents = app.path().resolve("Documents", BaseDirectory::Home).map_err(|error| error.to_string())?;
-    fs::create_dir_all(&documents).map_err(|error| error.to_string())?;
-    let root = documents.join(name);
+    Ok(name)
+}
+
+async fn initialize_vault(root: PathBuf, name: &str, state: State<'_, WorkspaceState>) -> Result<String, String> {
     fs::create_dir_all(&root).map_err(|error| error.to_string())?;
-    let journal = root.join("Journal");
-    fs::create_dir_all(&journal).map_err(|error| error.to_string())?;
+    fs::create_dir_all(root.join("Journal")).map_err(|error| error.to_string())?;
     let readme = root.join("README.md");
     if !readme.exists() {
-        fs::write(&readme, format!("# {name}\n\nYour local Typist workspace.\n")).map_err(|error| error.to_string())?;
+        fs::write(&readme, format!("# {name}\n\nYour local Typist vault.\n")).map_err(|error| error.to_string())?;
     }
     let root = canonical_workspace(&root)?;
     *state.0.lock().await = Some(root.clone());
@@ -90,8 +89,23 @@ pub async fn create_workspace(app: AppHandle, name: String, state: State<'_, Wor
 }
 
 #[tauri::command]
+pub async fn create_vault(app: AppHandle, name: String, custom_parent: Option<String>, state: State<'_, WorkspaceState>) -> Result<String, String> {
+    let name = validate_vault_name(&name)?;
+    let parent = match custom_parent {
+        Some(path) if !path.trim().is_empty() => PathBuf::from(path),
+        _ => app.path().resolve("Documents", BaseDirectory::Home).map_err(|error| error.to_string())?,
+    };
+    initialize_vault(parent.join(name), name, state).await
+}
+
+#[tauri::command]
+pub async fn create_workspace(app: AppHandle, name: String, state: State<'_, WorkspaceState>) -> Result<String, String> {
+    create_vault(app, name, None, state).await
+}
+
+#[tauri::command]
 pub async fn open_daily_journal(state: State<'_, WorkspaceState>) -> Result<String, String> {
-    let root = state.0.lock().await.clone().ok_or("workspace is not selected")?;
+    let root = state.0.lock().await.clone().ok_or("vault is not selected")?;
     let journal = root.join("Journal");
     fs::create_dir_all(&journal).map_err(|error| error.to_string())?;
     let date = chrono::Local::now().format("%Y-%m-%d").to_string();
@@ -111,19 +125,19 @@ pub async fn list_workspace(path: String, state: State<'_, WorkspaceState>) -> R
 
 #[tauri::command]
 pub async fn read_workspace_file(path: String, state: State<'_, WorkspaceState>) -> Result<String, String> {
-    let root = state.0.lock().await.clone().ok_or("workspace is not selected")?;
+    let root = state.0.lock().await.clone().ok_or("vault is not selected")?;
     fs::read_to_string(safe_path(&root, &path)?).map_err(|error| error.to_string())
 }
 
 #[tauri::command]
 pub async fn write_workspace_file(path: String, contents: String, state: State<'_, WorkspaceState>) -> Result<(), String> {
-    let root = state.0.lock().await.clone().ok_or("workspace is not selected")?;
+    let root = state.0.lock().await.clone().ok_or("vault is not selected")?;
     fs::write(safe_path(&root, &path)?, contents).map_err(|error| error.to_string())
 }
 
 #[tauri::command]
 pub async fn choose_workspace(app: AppHandle, state: State<'_, WorkspaceState>) -> Result<Option<String>, String> {
-    let selected = app.dialog().file().set_title("Choose workspace").blocking_pick_folder();
+    let selected = app.dialog().file().set_title("Choose vault").blocking_pick_folder();
     let Some(path) = selected else { return Ok(None); };
     let path = path.into_path().map_err(|error| error.to_string())?;
     let root = canonical_workspace(&path)?;
