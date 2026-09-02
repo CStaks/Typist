@@ -21,6 +21,8 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
+  const [introDismissed, setIntroDismissed] = useState(() => localStorage.getItem("typist-intro-dismissed") === "true");
   const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const windowControls = isTauri() ? getCurrentWindow() : undefined;
 
@@ -31,6 +33,7 @@ export default function App() {
 
   useEffect(() => {
     hasNewerCommit(currentCommit).then(setUpdateAvailable).catch(() => undefined);
+    if (windowControls) windowControls.isMaximized().then(setIsMaximized).catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -67,7 +70,7 @@ export default function App() {
         <div className="flex items-center gap-1">
           {updateAvailable && <a href={releasesUrl} target="_blank" rel="noreferrer" aria-label="Update available" className="rounded-lg p-2 text-[var(--accent)] hover:bg-black/5 dark:hover:bg-white/10"><Bell size={16} /></a>}
           <button aria-label={dark ? "Use light theme" : "Use dark theme"} onClick={() => setDark((value) => !value)} className="rounded-lg p-2 text-[var(--text-muted)] hover:bg-black/5 dark:hover:bg-white/10">{dark ? <Sun size={16} /> : <Moon size={16} />}</button>
-          {windowControls && <div className="ml-2 flex items-center" data-tauri-drag-region="false"><button aria-label="Minimize window" onClick={() => void windowControls.minimize()} className="p-2 text-[var(--text-muted)] hover:bg-black/5 dark:hover:bg-white/10"><Minus size={15} /></button><button aria-label="Maximize window" onClick={() => void windowControls.toggleMaximize()} className="p-2 text-[var(--text-muted)] hover:bg-black/5 dark:hover:bg-white/10"><Square size={12} /></button><button aria-label="Close window" onClick={() => void windowControls.close()} className="p-2 text-[var(--text-muted)] hover:bg-red-500 hover:text-white"><X size={15} /></button></div>}
+          {windowControls && <div className="ml-2 flex items-center" data-tauri-drag-region="false"><button aria-label="Minimize window" onClick={() => void windowControls.minimize()} className="p-2 text-[var(--text-muted)] hover:bg-black/5 dark:hover:bg-white/10"><Minus size={15} /></button><button aria-label={isMaximized ? "Restore window" : "Maximize window"} onClick={() => { void windowControls.toggleMaximize(); setIsMaximized((value) => !value); }} className="p-2 text-[var(--text-muted)] hover:bg-black/5 dark:hover:bg-white/10">{isMaximized ? <span className="text-xs">▣</span> : <Square size={12} />}</button><button aria-label="Close window" onClick={() => void windowControls.close()} className="p-2 text-[var(--text-muted)] hover:bg-red-500 hover:text-white"><X size={15} /></button></div>}
         </div>
       </header>
       <div className="flex min-h-0 flex-1">
@@ -77,7 +80,7 @@ export default function App() {
           {loading ? <div className="flex flex-1 items-center justify-center text-sm text-[var(--text-muted)]">Opening document…</div> : <MarkdownEditor value={content} onChange={handleChange} />}
         </section>
       </div>
-      <FirstLaunchIntro />
+      {!introDismissed && <FirstLaunchIntro onDismiss={() => { localStorage.setItem("typist-intro-dismissed", "true"); setIntroDismissed(true); }} />}
     </main>
   );
 }
