@@ -1,5 +1,6 @@
 import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
-import { Bell, Moon, Sun } from "lucide-react";
+import { Bell, Minus, Moon, Square, Sun, X } from "lucide-react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect, useRef, useState } from "react";
 import { Sidebar } from "./components/Sidebar";
 import { FirstLaunchIntro } from "./components/FirstLaunchIntro";
@@ -21,6 +22,7 @@ export default function App() {
   const [isDirty, setIsDirty] = useState(false);
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const windowControls = isTauri() ? getCurrentWindow() : undefined;
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
@@ -65,6 +67,7 @@ export default function App() {
         <div className="flex items-center gap-1">
           {updateAvailable && <a href={releasesUrl} target="_blank" rel="noreferrer" aria-label="Update available" className="rounded-lg p-2 text-[var(--accent)] hover:bg-black/5 dark:hover:bg-white/10"><Bell size={16} /></a>}
           <button aria-label={dark ? "Use light theme" : "Use dark theme"} onClick={() => setDark((value) => !value)} className="rounded-lg p-2 text-[var(--text-muted)] hover:bg-black/5 dark:hover:bg-white/10">{dark ? <Sun size={16} /> : <Moon size={16} />}</button>
+          {windowControls && <div className="ml-2 flex items-center" data-tauri-drag-region="false"><button aria-label="Minimize window" onClick={() => void windowControls.minimize()} className="p-2 text-[var(--text-muted)] hover:bg-black/5 dark:hover:bg-white/10"><Minus size={15} /></button><button aria-label="Maximize window" onClick={() => void windowControls.toggleMaximize()} className="p-2 text-[var(--text-muted)] hover:bg-black/5 dark:hover:bg-white/10"><Square size={12} /></button><button aria-label="Close window" onClick={() => void windowControls.close()} className="p-2 text-[var(--text-muted)] hover:bg-red-500 hover:text-white"><X size={15} /></button></div>}
         </div>
       </header>
       <div className="flex min-h-0 flex-1">
